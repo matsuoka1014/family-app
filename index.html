@@ -7,12 +7,12 @@
   <title>ファミリー管理 · 献立</title>
   <style>
     *{box-sizing:border-box}body{margin:0;background:#f6f7f2;color:#263c33;font-family:system-ui,sans-serif}main{max-width:520px;margin:auto;padding:32px 20px 60px}header p{color:#60756b;font-size:14px}h1{font-size:28px;margin:8px 0}form{background:white;padding:24px;border-radius:22px;border:1px solid #e0e7dc;margin-top:24px}label,legend{font-weight:600;font-size:15px}input{font:inherit;color:inherit}input[type=date],input[type=text],input[type=url]{display:block;width:100%;min-width:0;padding:14px;margin:8px 0 22px;border:1px solid #bccdc2;border-radius:10px;font-size:16px}fieldset{border:0;padding:0;margin:0 0 22px}fieldset:disabled{opacity:.6}#fields{margin:0}legend{margin-bottom:10px}.choices{display:flex;gap:10px}.choice{flex:1;position:relative}.choice input{position:absolute;opacity:0}.choice span{display:block;padding:14px 8px;border:1px solid #bccdc2;border-radius:12px;text-align:center}.choice input:checked+span{background:#e1f1e6;border:2px solid #32724f;padding:13px 7px}.choice input:focus-visible+span{outline:3px solid #c39339}button{width:100%;padding:16px;border:0;border-radius:12px;background:#32724f;color:white;font:inherit;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:wait}#status{line-height:1.7;white-space:pre-wrap;padding:16px 0;margin:0;font-size:14px}small{font-weight:normal;color:#64786d}.note{font-size:13px;line-height:1.7;color:#64786d}
-  .meal-card{background:white;border:1px solid #e0e7dc;border-radius:16px;padding:18px;margin:12px 0;overflow-wrap:anywhere}.meal-card h3{margin:8px 0 16px;font-size:18px}.meal-card p{margin:0}.meal-card a{display:inline-block;margin-top:14px;color:#32724f}.reuse{background:#e1f1e6;color:#263c33}#history{margin-top:36px}#history h2{font-size:23px}#historyStatus{font-size:14px;line-height:1.6}.history-tools{display:flex;gap:10px;align-items:center;margin-top:10px}.history-tools select{flex:1;min-width:0;font:inherit;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white}.history-tools button{width:auto;padding:12px 18px}button:focus-visible,a:focus-visible{outline:3px solid #c39339;outline-offset:3px}</style>
+  .meal-card{background:white;border:1px solid #e0e7dc;border-radius:16px;padding:18px;margin:12px 0;overflow-wrap:anywhere}.meal-card h3{margin:8px 0 16px;font-size:18px}.meal-card p{margin:0}.meal-card a{display:inline-block;margin-top:14px;color:#32724f}.reuse{background:#e1f1e6;color:#263c33}#history{margin-top:36px}#history h2{font-size:23px}#historyStatus{font-size:14px;line-height:1.6}.history-tools{display:flex;gap:10px;align-items:center;margin-top:10px}.history-tools select{flex:1;min-width:0;font:inherit;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white}.history-tools button{width:auto;padding:12px 18px}button:focus-visible,a:focus-visible{outline:3px solid #c39339;outline-offset:3px}.app-tabs{display:flex;gap:10px;margin:24px 0}.app-tabs button{background:#e1f1e6;color:#263c33}.app-tabs button[aria-pressed=true]{background:#32724f;color:white}#todoMessage,#todoCount{font-size:14px;line-height:1.7}#todoFields{margin:0}.taskAction{margin-top:16px}.overdue{color:#a33a28;font-weight:bold}[hidden]{display:none!important}</style>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 </head>
 <body>
 <main>
-  <header><p>家族のデジタル手帳</p><h1>今日の献立</h1><p>家庭と保育園のごはんを、ひとつの記録に。</p></header>
+  <header><p>家族のデジタル手帳</p><h1>今日の献立</h1><p>家庭と保育園のごはんを、ひとつの記録に。</p></header><nav class="app-tabs" aria-label="機能を選ぶ"><button id="mealTab" type="button" aria-pressed="true">🍽️ 献立</button><button id="todoTab" type="button" aria-pressed="false">✓ ToDo</button></nav><div id="mealPanel">
   <p id="status" role="status" aria-live="polite">LINEのログイン状態を確認しています…</p>
   <form id="mealForm">
     <fieldset id="fields" disabled>
@@ -27,7 +27,7 @@
     </fieldset>
   </form>
   <p class="note">保存先は家族のスプレッドシートです。LINEへの通知は送りません。</p>
-<section id="history" hidden aria-labelledby="historyTitle"><h2 id="historyTitle">献立の履歴</h2><p class="note">過去の料理をタップして、料理名とURLを再利用できます。入力欄の日付は変わりません。</p><label for="historyFilter">区分で絞り込み</label><div class="history-tools"><select id="historyFilter"><option value="">すべて</option><option value="家庭">🏠 家庭</option><option value="保育園">🐣 保育園</option></select><button id="refreshHistory" type="button">更新</button></div><p id="historyStatus" role="status" aria-live="polite"></p><div id="historyList"></div><button id="moreHistory" type="button" hidden>もっと見る</button></section></main>
+<section id="history" hidden aria-labelledby="historyTitle"><h2 id="historyTitle">献立の履歴</h2><p class="note">過去の料理をタップして、料理名とURLを再利用できます。入力欄の日付は変わりません。</p><label for="historyFilter">区分で絞り込み</label><div class="history-tools"><select id="historyFilter"><option value="">すべて</option><option value="家庭">🏠 家庭</option><option value="保育園">🐣 保育園</option></select><button id="refreshHistory" type="button">更新</button></div><p id="historyStatus" role="status" aria-live="polite"></p><div id="historyList"></div><button id="moreHistory" type="button" hidden>もっと見る</button></section></div><section id="todoPanel" hidden aria-labelledby="todoHeading"><h2 id="todoHeading">家族のToDo</h2><p class="note">やることを追加して、終わったらタップ。期限はここで確認できます。</p><p id="todoMessage" role="status" aria-live="polite"></p><form id="todoForm"><fieldset id="todoFields" disabled><label for="task">やること</label><input id="task" type="text" maxlength="300" placeholder="例：保育園の書類を提出する" required><label for="due">期限 <small>任意</small></label><input id="due" type="date"><button type="submit" id="addTodo">タスクを追加</button></fieldset></form><div class="history-tools"><label for="todoFilter">表示</label><select id="todoFilter"><option value="未完了">未完了</option><option value="完了">完了済み</option></select><button type="button" id="refreshTodos">更新</button></div><p id="todoCount" role="status" aria-live="polite"></p><div id="todoList"></div><button id="moreTodos" type="button" hidden>もっと見る</button></section></main>
 <script>
 'use strict';
 const LIFF_ID = '2011765255-ruAFo2xu';
@@ -52,6 +52,7 @@ async function initialize() {
     if (!liff.isLoggedIn()) { liff.login({redirectUri:APP_URL}); return; }
     if (!liff.getIDToken()) throw new Error('認証情報を取得できません。LIFFのScopeでopenidを確認してください。');
     fields.disabled = false;
+    loggedIn = true; todoFields.disabled = false; if (!todoPanel.hidden) loadTodos();
     statusBox.textContent = '入力して「献立を保存」を押してください。';
     loadHistory();
   } catch (error) {
@@ -175,6 +176,113 @@ async function loadHistory(append = false) {
 historyFilter.addEventListener('change', () => loadHistory());
 refreshHistory.addEventListener('click', () => loadHistory());
 moreHistory.addEventListener('click', () => loadHistory(true));
+
+
+const todoPanel = document.getElementById('todoPanel');
+const todoFields = document.getElementById('todoFields');
+const todoForm = document.getElementById('todoForm');
+const todoMessage = document.getElementById('todoMessage');
+const todoList = document.getElementById('todoList');
+const todoFilter = document.getElementById('todoFilter');
+const todoCount = document.getElementById('todoCount');
+const taskInput = document.getElementById('task');
+const dueInput = document.getElementById('due');
+const moreTodos = document.getElementById('moreTodos');
+const refreshTodos = document.getElementById('refreshTodos');
+let todoBusy = false, todoNext = null, todoVersion = 0, pendingTodo = null, loggedIn = false;
+function showPanel(name) {
+  document.getElementById('mealPanel').hidden = name !== 'meal';
+  todoPanel.hidden = name !== 'todo';
+  document.getElementById('mealTab').setAttribute('aria-pressed',String(name === 'meal'));
+  document.getElementById('todoTab').setAttribute('aria-pressed',String(name === 'todo'));
+  document.querySelector('h1').textContent = name === 'todo' ? '家族のToDo' : '今日の献立';
+  if (name === 'todo' && loggedIn) loadTodos();
+}
+document.getElementById('mealTab').addEventListener('click',()=>showPanel('meal'));
+document.getElementById('todoTab').addEventListener('click',()=>showPanel('todo'));
+async function todoRequest(action, params = {}) {
+  const idToken = liff.getIDToken();
+  if (!idToken) throw new Error('ログインの有効期限が切れました。画面を開き直してください。');
+  const controller = new AbortController();
+  const timeout = setTimeout(()=>controller.abort(),45000);
+  try {
+    const response = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',redirect:'follow',signal:controller.signal,body:JSON.stringify({...params,action,idToken})});
+    if (!response.ok) throw new Error('通信エラー');
+    const data = await response.json();
+    if (data.ok !== true) throw new Error(data.error || '操作できませんでした。');
+    return data.result;
+  } finally {clearTimeout(timeout);}
+}
+function taskDateLabel(task) {
+  if (!task.due) return '期限なし';
+  const today = new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());
+  const flag = task.status === '完了' ? '' : task.due < today ? ' ・期限切れ' : task.due === today ? ' ・今日まで' : '';
+  return '期限：' + task.due + flag;
+}
+async function loadTodos(append = false) {
+  if (!loggedIn) return;
+  const version = ++todoVersion;
+  const offset = append ? todoNext : 0;
+  if (offset === null) return;
+  todoCount.textContent = 'タスクを読み込んでいます…';
+  refreshTodos.disabled = true; moreTodos.disabled = true;
+  if (!append) { todoList.replaceChildren(); moreTodos.hidden = true; }
+  try {
+    const result = await todoRequest('listTodos',{status:todoFilter.value,offset});
+    if (version !== todoVersion) return;
+    for (const task of result.tasks) {
+      const card = document.createElement('article'); card.className = 'meal-card';
+      const title = document.createElement('h3'); title.textContent = task.task;
+      const due = document.createElement('p'); due.className = 'note'; due.textContent = taskDateLabel(task);
+      if (due.textContent.includes('期限切れ')) due.classList.add('overdue');
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'taskAction';
+      button.textContent = task.status === '完了' ? '未完了に戻す' : '✓ 完了にする';
+      button.disabled = todoBusy;
+      button.addEventListener('click',async()=>{
+        if (todoBusy) return;
+        todoBusy = true; lockTodos(true); todoVersion++;
+        const targetStatus = task.status === '完了' ? '未完了' : '完了';
+        todoMessage.textContent = '更新しています…';
+        try {
+          await todoRequest('setTodoStatus',{id:task.id,status:targetStatus});
+          todoMessage.textContent = targetStatus === '完了' ? '完了にしました。完了済み一覧から戻せます。' : '未完了に戻しました。';
+          await loadTodos();
+        } catch(error) {
+          todoMessage.textContent = '結果を確認できませんでした。「更新」で状態を確認してください。 ' + error.message;
+        } finally {todoBusy = false; lockTodos(false);}
+      });
+      card.append(title,due,button); todoList.append(card);
+    }
+    todoNext = result.nextOffset;
+    moreTodos.hidden = todoNext === null;
+    todoCount.textContent = result.total ? todoFilter.value + '：' + result.total + '件（期限の近い順）' : todoFilter.value === '未完了' ? '未完了のタスクはありません。' : '完了済みのタスクはありません。';
+  } catch(error) { if (version === todoVersion) todoCount.textContent = '取得できませんでした。 ' + error.message; }
+  finally { if(version === todoVersion) {refreshTodos.disabled = todoBusy; moreTodos.disabled = todoBusy;} }
+}
+function lockTodos(value) {
+  todoFields.disabled = value || !loggedIn; todoFilter.disabled = value; refreshTodos.disabled = value; moreTodos.disabled = value;
+  for (const button of todoList.querySelectorAll('button')) button.disabled = value;
+}
+todoForm.addEventListener('submit',async event=>{
+  event.preventDefault(); if(todoBusy || !todoForm.reportValidity()) return;
+  const task = taskInput.value.trim(), due = dueInput.value;
+  if(!task) {todoMessage.textContent = 'やることを入力してください。';return;}
+  const signature = JSON.stringify({task,due});
+  if(!pendingTodo || pendingTodo.signature !== signature) pendingTodo = {signature,id:crypto.randomUUID()};
+  todoBusy = true; lockTodos(true); todoVersion++;
+  todoMessage.textContent = '追加しています…';
+  try {
+    await todoRequest('addTodo',{id:pendingTodo.id,task,due});
+    pendingTodo = null; taskInput.value = ''; dueInput.value = ''; todoFilter.value = '未完了';
+    todoMessage.textContent = 'タスクを追加しました。';
+    await loadTodos();
+  } catch(error) {
+    todoMessage.textContent = '追加結果を確認できませんでした。「更新」で確認してください。同じ内容のまま再度追加しても重複しません。 ' + error.message;
+  } finally {todoBusy = false; lockTodos(false);}
+});
+todoFilter.addEventListener('change',()=>loadTodos());
+refreshTodos.addEventListener('click',()=>loadTodos());
+moreTodos.addEventListener('click',()=>loadTodos(true));
 
 initialize();
 </script>
