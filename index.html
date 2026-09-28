@@ -97,7 +97,7 @@ form.addEventListener('submit', async event => {
     statusBox.textContent = `保存しました！\n${meal.date} ／ ${meal.category} ／ ${meal.dish}`;
     dishInput.value = '';
     urlInput.value = '';
-    loadHistory();
+    loadHistory(); loadDayPlan();
   } catch (_) {
     statusBox.textContent = '保存結果を確認できませんでした。すでに保存されている可能性があります。\nスプレッドシートの「献立」を確認し、行がなければ再度保存してください。';
   } finally {
@@ -154,7 +154,7 @@ async function loadHistory(append = false) {
         form.scrollIntoView({behavior:'smooth',block:'start'});
         dishInput.focus({preventScroll:true});
       });
-      card.append(meta,title,reuse);
+      card.append(meta,title,reuse); if(meal.category==='家庭')appendTaskLink(card,'買い物：'+meal.dish+'の材料',dateInput.value,'🛒 材料の買い物をToDoに入力');
       try {
         const url = new URL(meal.recipeUrl);
         if (['http:','https:'].includes(url.protocol)) {
@@ -197,7 +197,7 @@ function showPanel(name) {
   document.getElementById('mealTab').setAttribute('aria-pressed',String(name === 'meal'));
   document.getElementById('todoTab').setAttribute('aria-pressed',String(name === 'todo'));
   document.querySelector('h1').textContent = name === 'home' ? '家族のホーム' : name === 'health' ? '家族の健康記録' : name === 'schedule' ? '家族の予定' : name === 'todo' ? '家族のToDo' : '今日の献立';
-  if (name === 'todo' && loggedIn) loadTodos();
+  if (name === 'todo' && loggedIn) loadTodos(); if(name==='meal'&&loggedIn)loadDayPlan();
 }
 document.getElementById('mealTab').addEventListener('click',()=>showPanel('meal'));
 document.getElementById('todoTab').addEventListener('click',()=>showPanel('todo'));
@@ -252,7 +252,7 @@ async function loadTodos(append = false) {
           todoMessage.textContent = '結果を確認できませんでした。「更新」で状態を確認してください。 ' + error.message;
         } finally {todoBusy = false; lockTodos(false);}
       });
-      card.append(title,due,button); todoList.append(card);
+      if(task.task.startsWith('買い物：')){const badge=document.createElement('span');badge.className='task-badge';badge.textContent='🛒 買い物';card.append(badge);}card.append(title,due,button); todoList.append(card);
     }
     todoNext = result.nextOffset;
     moreTodos.hidden = todoNext === null;
@@ -302,7 +302,7 @@ function eventCard(event) {
   const date = document.createElement('p'); date.className = 'note'; date.textContent = event.date+' ／ '+(event.time||'終日')+' ／ '+(event.source||'アプリ');
   const title = document.createElement('h3'); title.textContent = event.title;
   const note = document.createElement('p'); note.style.whiteSpace = 'pre-wrap'; note.textContent = event.note;
-  card.append(date,title,note);
+  card.append(date,title,note); appendTaskLink(card,'準備：'+event.title,event.date,'✓ この予定の準備をToDoに入力');
   if(event.url && event.url.startsWith('https://www.google.com/calendar/')){const a=document.createElement('a');a.href=event.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Googleカレンダーで開く';card.append(a);}
   return card;
 }
@@ -532,9 +532,29 @@ async function loadManage(append){if(manageBusy)return;const version=++manageLoa
 function renderManageRecord(r){const card=document.createElement('article'),h=document.createElement('h3'),p=document.createElement('p'),tools=document.createElement('div');tools.className='tools';p.className='detail';if(manageMode==='trash'){h.textContent=r.title;p.textContent=r.deletedAt+' に削除';const restore=document.createElement('button');restore.type='button';restore.textContent='復元';restore.addEventListener('click',()=>changeRecord('restore',r));tools.append(restore);}else{const d=r.data;h.textContent=d.dish||d.task||d.title||d.person+'：'+d.condition;p.textContent=[d.date||d.due||'期限なし',d.category||d.status||'',r.kind==='google'?'Googleカレンダー'+(r.recurring?'・この回のみ':''):'',d.startTime?d.startTime+'〜'+d.endTime:'',d.note||''].filter(Boolean).join(' ／ ');const edit=document.createElement('button');edit.type='button';edit.textContent='修正';edit.addEventListener('click',()=>editRecord(r));const del=document.createElement('button');del.type='button';del.className='danger';del.textContent='削除';del.addEventListener('click',()=>{tools.replaceChildren();const prompt=document.createElement('p');prompt.textContent=r.kind==='google'?'この予定をGoogleカレンダーからも削除します。よろしいですか？':'この記録をごみ箱に移しますか？';const yes=document.createElement('button');yes.type='button';yes.className='danger';yes.textContent='削除する';yes.addEventListener('click',()=>changeRecord('delete',r));const no=document.createElement('button');no.type='button';no.className='secondary';no.textContent='やめる';no.addEventListener('click',()=>{tools.replaceChildren(edit,del);});tools.append(prompt,yes,no);});tools.append(edit,del);}card.append(h,p,tools);manageList.append(card);}
 function editRecord(r){editingRecord=r;manageForm.hidden=false;manageList.hidden=true;document.getElementById('manageTools').hidden=true;document.getElementById('manageMore').hidden=true;manageMessage.textContent='内容を修正して保存してください。';const fields=document.getElementById('manageEditFields');fields.replaceChildren();editSchemas[r.kind].forEach(([key,label,type,required,max])=>{const l=document.createElement('label');l.htmlFor='edit-'+key;l.textContent=label;const input=document.createElement(Array.isArray(type)?'select':type==='textarea'?'textarea':'input');input.id='edit-'+key;input.name=key;if(Array.isArray(type)){type.forEach(v=>{const option=document.createElement('option');option.value=Array.isArray(v)?v[0]:v;option.textContent=Array.isArray(v)?v[1]:v;input.append(option);});}else if(type!=='textarea')input.type=type;else input.rows=3;if(max)input.maxLength=max;if(type==='number'){input.min='0';input.max='9999';input.step='0.01';}input.required=!!required;input.value=r.data[key]||'';fields.append(l,input);});document.getElementById('manageEditNote').textContent=r.kind==='google'?'Googleカレンダーにも反映します。'+(r.recurring?'繰り返し予定のこの回だけを変更します。':''):'';if(r.kind==='google'){const toggle=()=>{const timed=document.getElementById('edit-allDay').value==='no';['startTime','endTime'].forEach(k=>{const el=document.getElementById('edit-'+k);el.required=timed;el.hidden=!timed;el.previousElementSibling.hidden=!timed;});};document.getElementById('edit-allDay').addEventListener('change',toggle);toggle();}}
 async function changeRecord(mode,r,data){if(manageBusy)return;manageLock(true);manageMessage.textContent='保存しています…';try{const result=await todoRequest('manageRecords',{mode:mode,kind:r.kind||manageKind,id:r.id,rev:r.rev,data:data});manageMessage.textContent=result.message;manageBack();manageLock(false);await loadManage(false);manageMessage.textContent=result.message+' '+manageMessage.textContent;refreshAfterManage();}catch(e){manageMessage.textContent='処理結果を確認してください。一覧を更新すると最新の状態を確認できます。 '+e.message;}finally{manageLock(false);}}
-function refreshAfterManage(){if(manageKind==='meal'){loadHistory();if(document.getElementById('mealMonthDetails').open)loadMealMonth();}if(manageKind==='todo')loadTodos();if(manageKind==='schedule')loadSchedules();if(manageKind==='health')loadHealth();}
+function refreshAfterManage(){if(manageKind==='meal'){loadHistory();loadDayPlan();if(document.getElementById('mealMonthDetails').open)loadMealMonth();}if(manageKind==='todo')loadTodos();if(manageKind==='schedule')loadSchedules();if(manageKind==='health')loadHealth();}
 manageForm.addEventListener('submit',e=>{e.preventDefault();if(!manageForm.reportValidity()||!editingRecord)return;const data=Object.fromEntries(new FormData(manageForm).entries());changeRecord('update',editingRecord,data);});
 document.getElementById('closeManage').addEventListener('click',()=>{if(!manageBusy)manageDialog.close();});manageDialog.addEventListener('cancel',e=>{if(manageBusy)e.preventDefault();});document.getElementById('cancelManageEdit').addEventListener('click',()=>{manageBack();manageMessage.textContent='';});document.getElementById('manageSearch').addEventListener('click',()=>{manageMode='list';loadManage(false);});document.getElementById('manageTrash').addEventListener('click',()=>{manageMode='trash';loadManage(false);});document.getElementById('manageMore').addEventListener('click',()=>loadManage(true));
 </script>
+
+<style>
+.app-tabs{position:sticky;top:0;z-index:5;background:#f6f7f2;padding:10px 0;box-shadow:0 3px 6px #263c3310}.quick-dates,.quick-tasks{display:flex;flex-wrap:wrap;gap:8px;margin:-10px 0 20px}.quick-dates button,.quick-tasks button{width:auto;min-height:44px;padding:10px 14px;background:#e1f1e6;color:#263c33}.context-button{margin-top:12px;background:#e8eee5;color:#24573e}.day-plan{background:#edf4ec;border:1px solid #cfddcc;border-radius:18px;padding:18px;margin:18px 0}.day-plan h2{font-size:20px;margin:0 0 8px}.day-plan h3{font-size:16px;margin:14px 0 8px}.day-plan p{white-space:pre-wrap;line-height:1.7;overflow-wrap:anywhere}.day-plan .day-controls{display:flex;gap:8px}.day-controls button{padding:10px;min-height:44px}.day-plan .refresh-plan{background:transparent;color:#32724f;text-decoration:underline;padding:10px;min-height:44px}.task-badge{display:inline-block;background:#e1f1e6;color:#24573e;padding:4px 10px;border-radius:20px;font-size:12px}.manage-dialog select,.manage-dialog input[type=search],.manage-dialog input[type=time],.manage-dialog input[type=number]{font:inherit;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white}.manage-dialog{overscroll-behavior:contain}html{scroll-padding-top:90px}
+</style>
+<script>
+function japanToday(){return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(new Date());}
+function relativeDate(base,offset){const d=new Date(base+'T12:00:00+09:00');d.setUTCDate(d.getUTCDate()+offset);return new Intl.DateTimeFormat('sv-SE',{timeZone:'Asia/Tokyo'}).format(d);}
+function quickDates(input,choices){const row=document.createElement('div');row.className='quick-dates';row.setAttribute('aria-label','日付をすばやく選ぶ');for(const [text,offset] of choices){const b=document.createElement('button');b.type='button';b.textContent=text;b.addEventListener('click',()=>{if(!loggedIn||input.matches(':disabled'))return;input.value=offset===null?'':relativeDate(japanToday(),offset);input.dispatchEvent(new Event('change',{bubbles:true}));});row.append(b);}input.after(row);}
+quickDates(dateInput,[['今日',0],['明日',1],['1週間後',7]]);quickDates(dueInput,[['今日まで',0],['明日まで',1],['1週間後',7],['期限なし',null]]);quickDates(scheduleDate,[['今日',0],['明日',1],['1週間後',7]]);quickDates(healthDate,[['今日',0],['昨日',-1]]);
+function prepareFamilyTask(text,due){if(!loggedIn||todoBusy)return;if(taskInput.value.trim()&&!window.confirm('入力中のToDoを、この内容に置き換えますか？'))return;showPanel('todo');taskInput.value=text.slice(0,300);dueInput.value=due||'';todoMessage.textContent='入力しました。内容と期限を確認して「タスクを追加」を押してください。まだ保存していません。';todoForm.scrollIntoView({behavior:'smooth',block:'start'});taskInput.focus({preventScroll:true});}
+function appendTaskLink(card,text,due,label){const b=document.createElement('button');b.type='button';b.className='context-button';b.textContent=label;b.addEventListener('click',()=>prepareFamilyTask(text,due));card.append(b);}
+const taskShortcuts=document.createElement('div');taskShortcuts.className='quick-tasks';taskShortcuts.setAttribute('aria-label','ToDoの入力テンプレート');for(const [label,text] of [['🛒 買い物','買い物：'],['📄 提出物','提出：'],['🎒 持ち物','持ち物：'],['📅 予約','予約：']]){const b=document.createElement('button');b.type='button';b.textContent=label;b.addEventListener('click',()=>prepareFamilyTask(text,dueInput.value));taskShortcuts.append(b);}taskInput.before(taskShortcuts);
+const taskHint=document.createElement('p');taskHint.className='note';taskHint.textContent='買い物もここで共有できます。1件ずつ追加して、買ったら「完了」に。';document.getElementById('todoHeading').after(taskHint);
+const dayPlanner=document.createElement('section');dayPlanner.className='day-plan';dayPlanner.innerHTML='<h2>この日の献立を確認</h2><p class="note">保育園の献立を見ながら、家庭の献立を考えられます。</p><div class="day-controls"><button type="button" id="planPrevious">‹ 前の日</button><button type="button" id="planNext">次の日 ›</button></div><p id="dayPlanStatus" role="status" aria-live="polite"></p><div id="dayPlanMeals"></div><button type="button" class="refresh-plan" id="refreshDayPlan">この日の献立を更新</button>';
+form.before(dayPlanner);let dayPlanVersion=0;
+async function loadDayPlan(){const target=dateInput.value,version=++dayPlanVersion;const box=document.getElementById('dayPlanMeals'),message=document.getElementById('dayPlanStatus');box.replaceChildren();if(!loggedIn){message.textContent='LINEのログイン後に表示します。';return;}if(!target){message.textContent='下の入力欄で日付を選んでください。';return;}message.textContent=target+' の献立を読み込んでいます…';try{const result=await todoRequest('mealMonth',{month:target.slice(0,7)});if(version!==dayPlanVersion)return;for(const category of ['保育園','家庭']){const section=document.createElement('div'),h=document.createElement('h3');h.textContent=category==='家庭'?'🏠 家庭':'🐣 保育園';section.append(h);const meals=result.meals.filter(m=>m.date===target&&m.category===category);if(!meals.length){const p=document.createElement('p');p.className='note';p.textContent='まだ登録されていません。';section.append(p);}for(const meal of meals){const p=document.createElement('p');p.textContent=meal.dish;section.append(p);if(category==='家庭')appendTaskLink(section,'買い物：'+meal.dish+'の材料',target,'🛒 材料の買い物をToDoに入力');}box.append(section);}message.textContent=target+' の登録内容';}catch(e){if(version===dayPlanVersion)message.textContent='取得できませんでした。「この日の献立を更新」で再確認してください。 '+e.message;}}
+dateInput.addEventListener('change',loadDayPlan);document.getElementById('refreshDayPlan').addEventListener('click',loadDayPlan);for(const [id,offset] of [['planPrevious',-1],['planNext',1]])document.getElementById(id).addEventListener('click',()=>{if(!loggedIn||busy)return;dateInput.value=relativeDate(dateInput.value||japanToday(),offset);loadDayPlan();});
+
+</script>
+
 </body>
 </html>
