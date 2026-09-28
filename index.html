@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="referrer" content="no-referrer">
+  <title>ファミリー管理 · 献立</title>
+  <style>
+    *{box-sizing:border-box}body{margin:0;background:#f6f7f2;color:#263c33;font-family:system-ui,sans-serif}main{max-width:520px;margin:auto;padding:32px 20px 60px}header p{color:#60756b;font-size:14px}h1{font-size:28px;margin:8px 0}form{background:white;padding:24px;border-radius:22px;border:1px solid #e0e7dc;margin-top:24px}label,legend{font-weight:600;font-size:15px}input{font:inherit;color:inherit}input[type=date],input[type=text],input[type=url]{display:block;width:100%;min-width:0;padding:14px;margin:8px 0 22px;border:1px solid #bccdc2;border-radius:10px;font-size:16px}fieldset{border:0;padding:0;margin:0 0 22px}fieldset:disabled{opacity:.6}#fields{margin:0}legend{margin-bottom:10px}.choices{display:flex;gap:10px}.choice{flex:1;position:relative}.choice input{position:absolute;opacity:0}.choice span{display:block;padding:14px 8px;border:1px solid #bccdc2;border-radius:12px;text-align:center}.choice input:checked+span{background:#e1f1e6;border:2px solid #32724f;padding:13px 7px}.choice input:focus-visible+span{outline:3px solid #c39339}button{width:100%;padding:16px;border:0;border-radius:12px;background:#32724f;color:white;font:inherit;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:wait}#status{line-height:1.7;white-space:pre-wrap;padding:16px 0;margin:0;font-size:14px}small{font-weight:normal;color:#64786d}.note{font-size:13px;line-height:1.7;color:#64786d}
+  </style>
+  <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
+</head>
+<body>
+<main>
+  <header><p>家族のデジタル手帳</p><h1>今日の献立</h1><p>家庭と保育園のごはんを、ひとつの記録に。</p></header>
+  <p id="status" role="status" aria-live="polite">LINEのログイン状態を確認しています…</p>
+  <form id="mealForm">
+    <fieldset id="fields" disabled>
+      <label for="date">日付</label><input id="date" type="date" required>
+      <fieldset><legend>どこの献立？</legend><div class="choices">
+        <label class="choice"><input type="radio" name="category" value="家庭" checked><span>🏠 家庭</span></label>
+        <label class="choice"><input type="radio" name="category" value="保育園"><span>🐣 保育園</span></label>
+      </div></fieldset>
+      <label for="dish">料理名</label><input id="dish" type="text" maxlength="200" placeholder="例：カレーライス、サラダ" required>
+      <label for="recipeUrl">レシピURL <small>任意</small></label><input id="recipeUrl" type="url" maxlength="2000" placeholder="https://…">
+      <button id="save" type="submit">献立を保存</button>
+    </fieldset>
+  </form>
+  <p class="note">保存先は家族のスプレッドシートです。LINEへの通知は送りません。現在は献立の登録に対応しています。</p>
+</main>
+<script>
+'use strict';
+const LIFF_ID = '2011765255-ruAFo2xu';
+const APP_URL = 'https://matsuoka1014.github.io/family-app/';
+const API_URL = 'https://script.google.com/macros/s/AKfycbxaRyGYeobd2rqhcS0teJ0D5Bc6_iQDZ9K2POZYFcI5jFbUWmeL2h2RZUT7Om2z7zma/exec';
+const form = document.getElementById('mealForm');
+const fields = document.getElementById('fields');
+const statusBox = document.getElementById('status');
+const saveButton = document.getElementById('save');
+const dateInput = document.getElementById('date');
+const dishInput = document.getElementById('dish');
+const urlInput = document.getElementById('recipeUrl');
+let busy = false;
+const parts = new Intl.DateTimeFormat('en-US', { timeZone:'Asia/Tokyo',year:'numeric',month:'2-digit',day:'2-digit' }).formatToParts(new Date());
+const dateParts = Object.fromEntries(parts.map(p => [p.type,p.value]));
+dateInput.value = `${dateParts.year}-${dateParts.month}-${dateParts.day}`;
+
+async function initialize() {
+  try {
+    if (!window.liff) throw new Error('LINEの読み込みに失敗しました。通信環境を確認して開き直してください。');
+    await liff.init({liffId:LIFF_ID});
+    if (!liff.isLoggedIn()) { liff.login({redirectUri:APP_URL}); return; }
+    if (!liff.getIDToken()) throw new Error('認証情報を取得できません。LIFFのScopeでopenidを確認してください。');
+    fields.disabled = false;
+    statusBox.textContent = '入力して「献立を保存」を押してください。';
+  } catch (error) {
+    statusBox.textContent = 'ログイン確認に失敗しました。\n' + error.message;
+  }
+}
+
+form.addEventListener('submit', async event => {
+  event.preventDefault();
+  if (busy || !form.reportValidity()) return;
+  const dish = dishInput.value.trim();
+  const recipeUrl = urlInput.value.trim();
+  if (!dish) { statusBox.textContent = '料理名を入力してください。'; return; }
+  if (recipeUrl) {
+    try { if (!['https:','http:'].includes(new URL(recipeUrl).protocol)) throw new Error(); }
+    catch (_) { statusBox.textContent = 'レシピURLはhttp://またはhttps://で入力してください。'; return; }
+  }
+  const idToken = liff.getIDToken();
+  if (!idToken) { statusBox.textContent = '認証の有効期限が切れました。画面を開き直してください。'; return; }
+  const meal = {date:dateInput.value,category:form.querySelector('input[name=category]:checked').value,dish,recipeUrl};
+  busy = true;
+  fields.disabled = true;
+  saveButton.textContent = '保存中…';
+  statusBox.textContent = '保存しています。この画面でお待ちください。';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 45000);
+  try {
+    // text/plainでプリフライトを避け、GASからのJSON応答を確認する。
+    // no-corsや自動再送は使用しない。
+    const response = await fetch(API_URL, {
+      method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},
+      credentials:'omit',redirect:'follow',signal:controller.signal,
+      body:JSON.stringify({action:'addMeal',idToken,meal})
+    });
+    if (!response.ok) throw new Error('HTTP error');
+    const data = await response.json();
+    if (data.ok === false) {
+      statusBox.textContent = '保存できませんでした。\n' + (data.error || '設定を確認してください。');
+      return;
+    }
+    if (data.ok !== true || !data.result) throw new Error('Invalid response');
+    statusBox.textContent = `保存しました！\n${meal.date} ／ ${meal.category} ／ ${meal.dish}`;
+    dishInput.value = '';
+    urlInput.value = '';
+  } catch (_) {
+    statusBox.textContent = '保存結果を確認できませんでした。すでに保存されている可能性があります。\nスプレッドシートの「献立」を確認し、行がなければ再度保存してください。';
+  } finally {
+    clearTimeout(timeout);
+    busy = false;
+    fields.disabled = false;
+    saveButton.textContent = '献立を保存';
+  }
+});
+initialize();
+</script>
+</body>
+</html>
