@@ -52,7 +52,7 @@ async function initialize() {
     if (!liff.isLoggedIn()) { liff.login({redirectUri:APP_URL}); return; }
     if (!liff.getIDToken()) throw new Error('認証情報を取得できません。LIFFのScopeでopenidを確認してください。');
     fields.disabled = false;
-    loggedIn = true; if(!homePanel.hidden)loadHome(); healthFields.disabled = false; if (!healthPanel.hidden) loadHealth(); todoFields.disabled = false; scheduleFields.disabled = false; if (!schedulePanel.hidden) loadSchedules(); if (!todoPanel.hidden) loadTodos();
+    loggedIn = true; if(!document.getElementById('mealPanel').hidden)loadDayPlan(); if(!homePanel.hidden)loadHome(); healthFields.disabled = false; if (!healthPanel.hidden) loadHealth(); todoFields.disabled = false; scheduleFields.disabled = false; if (!schedulePanel.hidden) loadSchedules(); if (!todoPanel.hidden) loadTodos();
     statusBox.textContent = '入力して「献立を保存」を押してください。';
     loadHistory();
   } catch (error) {
@@ -196,7 +196,7 @@ function showPanel(name) {
   healthPanel.hidden = name !== 'health'; document.getElementById('healthTab').setAttribute('aria-pressed',String(name === 'health')); if(name === 'health' && loggedIn) loadHealth(); todoPanel.hidden = name !== 'todo'; schedulePanel.hidden = name !== 'schedule'; document.getElementById('scheduleTab').setAttribute('aria-pressed',String(name === 'schedule')); if(name === 'schedule' && loggedIn) loadSchedules();
   document.getElementById('mealTab').setAttribute('aria-pressed',String(name === 'meal'));
   document.getElementById('todoTab').setAttribute('aria-pressed',String(name === 'todo'));
-  document.querySelector('h1').textContent = name === 'home' ? '家族のホーム' : name === 'health' ? '家族の健康記録' : name === 'schedule' ? '家族の予定' : name === 'todo' ? '家族のToDo' : '今日の献立';
+  document.querySelector('h1').textContent = name === 'home' ? '家族のホーム' : name === 'health' ? '家族の健康記録' : name === 'schedule' ? '家族の予定' : name === 'todo' ? '家族のToDo' : '家族の献立';
   if (name === 'todo' && loggedIn) loadTodos(); if(name==='meal'&&loggedIn)loadDayPlan();
 }
 document.getElementById('mealTab').addEventListener('click',()=>showPanel('meal'));
@@ -267,7 +267,7 @@ function lockTodos(value) {
 todoForm.addEventListener('submit',async event=>{
   event.preventDefault(); if(todoBusy || !todoForm.reportValidity()) return;
   const task = taskInput.value.trim(), due = dueInput.value;
-  if(!task) {todoMessage.textContent = 'やることを入力してください。';return;}
+  if(!task || /^(買い物|提出|持ち物|予約)：$/.test(task)) {todoMessage.textContent = 'やること・買うものの内容を入力してください。';return;}
   const signature = JSON.stringify({task,due});
   if(!pendingTodo || pendingTodo.signature !== signature) pendingTodo = {signature,id:crypto.randomUUID()};
   todoBusy = true; lockTodos(true); todoVersion++;
