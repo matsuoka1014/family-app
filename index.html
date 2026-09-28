@@ -7,7 +7,7 @@
   <title>ファミリー管理 · 献立</title>
   <style>
     *{box-sizing:border-box}body{margin:0;background:#f6f7f2;color:#263c33;font-family:system-ui,sans-serif}main{max-width:520px;margin:auto;padding:32px 20px 60px}header p{color:#60756b;font-size:14px}h1{font-size:28px;margin:8px 0}form{background:white;padding:24px;border-radius:22px;border:1px solid #e0e7dc;margin-top:24px}label,legend{font-weight:600;font-size:15px}input{font:inherit;color:inherit}input[type=date],input[type=text],input[type=url]{display:block;width:100%;min-width:0;padding:14px;margin:8px 0 22px;border:1px solid #bccdc2;border-radius:10px;font-size:16px}fieldset{border:0;padding:0;margin:0 0 22px}fieldset:disabled{opacity:.6}#fields{margin:0}legend{margin-bottom:10px}.choices{display:flex;gap:10px}.choice{flex:1;position:relative}.choice input{position:absolute;opacity:0}.choice span{display:block;padding:14px 8px;border:1px solid #bccdc2;border-radius:12px;text-align:center}.choice input:checked+span{background:#e1f1e6;border:2px solid #32724f;padding:13px 7px}.choice input:focus-visible+span{outline:3px solid #c39339}button{width:100%;padding:16px;border:0;border-radius:12px;background:#32724f;color:white;font:inherit;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:wait}#status{line-height:1.7;white-space:pre-wrap;padding:16px 0;margin:0;font-size:14px}small{font-weight:normal;color:#64786d}.note{font-size:13px;line-height:1.7;color:#64786d}
-  </style>
+  .meal-card{background:white;border:1px solid #e0e7dc;border-radius:16px;padding:18px;margin:12px 0;overflow-wrap:anywhere}.meal-card h3{margin:8px 0 16px;font-size:18px}.meal-card p{margin:0}.meal-card a{display:inline-block;margin-top:14px;color:#32724f}.reuse{background:#e1f1e6;color:#263c33}#history{margin-top:36px}#history h2{font-size:23px}#historyStatus{font-size:14px;line-height:1.6}.history-tools{display:flex;gap:10px;align-items:center;margin-top:10px}.history-tools select{flex:1;min-width:0;font:inherit;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white}.history-tools button{width:auto;padding:12px 18px}button:focus-visible,a:focus-visible{outline:3px solid #c39339;outline-offset:3px}</style>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 </head>
 <body>
@@ -26,8 +26,8 @@
       <button id="save" type="submit">献立を保存</button>
     </fieldset>
   </form>
-  <p class="note">保存先は家族のスプレッドシートです。LINEへの通知は送りません。現在は献立の登録に対応しています。</p>
-</main>
+  <p class="note">保存先は家族のスプレッドシートです。LINEへの通知は送りません。</p>
+<section id="history" hidden aria-labelledby="historyTitle"><h2 id="historyTitle">献立の履歴</h2><p class="note">過去の料理をタップして、料理名とURLを再利用できます。入力欄の日付は変わりません。</p><label for="historyFilter">区分で絞り込み</label><div class="history-tools"><select id="historyFilter"><option value="">すべて</option><option value="家庭">🏠 家庭</option><option value="保育園">🐣 保育園</option></select><button id="refreshHistory" type="button">更新</button></div><p id="historyStatus" role="status" aria-live="polite"></p><div id="historyList"></div><button id="moreHistory" type="button" hidden>もっと見る</button></section></main>
 <script>
 'use strict';
 const LIFF_ID = '2011765255-ruAFo2xu';
@@ -53,6 +53,7 @@ async function initialize() {
     if (!liff.getIDToken()) throw new Error('認証情報を取得できません。LIFFのScopeでopenidを確認してください。');
     fields.disabled = false;
     statusBox.textContent = '入力して「献立を保存」を押してください。';
+    loadHistory();
   } catch (error) {
     statusBox.textContent = 'ログイン確認に失敗しました。\n' + error.message;
   }
@@ -95,6 +96,7 @@ form.addEventListener('submit', async event => {
     statusBox.textContent = `保存しました！\n${meal.date} ／ ${meal.category} ／ ${meal.dish}`;
     dishInput.value = '';
     urlInput.value = '';
+    loadHistory();
   } catch (_) {
     statusBox.textContent = '保存結果を確認できませんでした。すでに保存されている可能性があります。\nスプレッドシートの「献立」を確認し、行がなければ再度保存してください。';
   } finally {
@@ -104,6 +106,76 @@ form.addEventListener('submit', async event => {
     saveButton.textContent = '献立を保存';
   }
 });
+
+const historySection = document.getElementById('history');
+const historyStatus = document.getElementById('historyStatus');
+const historyList = document.getElementById('historyList');
+const historyFilter = document.getElementById('historyFilter');
+const refreshHistory = document.getElementById('refreshHistory');
+const moreHistory = document.getElementById('moreHistory');
+let nextOffset = null;
+let historyVersion = 0;
+async function loadHistory(append = false) {
+  const version = ++historyVersion;
+  const offset = append ? nextOffset : 0;
+  if (offset === null) return;
+  historySection.hidden = false;
+  historyStatus.textContent = '履歴を読み込んでいます…';
+  moreHistory.disabled = true;
+  refreshHistory.disabled = true;
+  if (!append) { historyList.replaceChildren(); moreHistory.hidden = true; }
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 45000);
+  try {
+    const idToken = liff.getIDToken();
+    if (!idToken) throw new Error('ログインの有効期限が切れました。画面を開き直してください。');
+    const response = await fetch(API_URL, {
+      method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',redirect:'follow',signal:controller.signal,
+      body:JSON.stringify({action:'listMeals',idToken,offset,category:historyFilter.value})
+    });
+    if (!response.ok) throw new Error('通信に失敗しました。もう一度「更新」を押してください。');
+    const data = await response.json();
+    if (version !== historyVersion) return;
+    if (!data.ok) throw new Error(data.error || '履歴を取得できませんでした。');
+    if (!data.result || !Array.isArray(data.result.meals)) throw new Error('履歴の形式を確認できません。');
+    for (const meal of data.result.meals) {
+      const card = document.createElement('article'); card.className = 'meal-card';
+      const meta = document.createElement('p'); meta.className = 'note'; meta.textContent = meal.date + ' ／ ' + meal.category;
+      const title = document.createElement('h3'); title.textContent = meal.dish;
+      const reuse = document.createElement('button'); reuse.type = 'button'; reuse.className = 'reuse'; reuse.textContent = 'この料理を入力';
+      reuse.addEventListener('click', () => {
+        if (busy || fields.disabled) return;
+        if ((dishInput.value.trim() || urlInput.value.trim()) && !window.confirm('入力中の料理名とURLを、この料理に置き換えますか？')) return;
+        dishInput.value = meal.dish;
+        urlInput.value = meal.recipeUrl || '';
+        for (const radio of form.querySelectorAll('input[name=category]')) radio.checked = radio.value === meal.category;
+        statusBox.textContent = '料理を入力しました。日付を確認して「献立を保存」を押してください。';
+        form.scrollIntoView({behavior:'smooth',block:'start'});
+        dishInput.focus({preventScroll:true});
+      });
+      card.append(meta,title,reuse);
+      try {
+        const url = new URL(meal.recipeUrl);
+        if (['http:','https:'].includes(url.protocol)) {
+          const link = document.createElement('a'); link.href = url.href; link.textContent = 'レシピを見る ↗'; link.target = '_blank'; link.rel = 'noopener noreferrer'; card.append(link);
+        }
+      } catch (_) {}
+      historyList.append(card);
+    }
+    nextOffset = data.result.nextOffset;
+    moreHistory.hidden = nextOffset === null;
+    historyStatus.textContent = historyList.children.length ? historyList.children.length + '件を表示（日付の新しい順）' : 'この区分の献立はまだありません。';
+  } catch (error) {
+    if (version === historyVersion) historyStatus.textContent = '履歴を読み込めませんでした。' + (error.name === 'AbortError' ? '時間をおいて更新してください。' : error.message);
+  } finally {
+    clearTimeout(timer);
+    if (version === historyVersion) { moreHistory.disabled = false; refreshHistory.disabled = false; }
+  }
+}
+historyFilter.addEventListener('change', () => loadHistory());
+refreshHistory.addEventListener('click', () => loadHistory());
+moreHistory.addEventListener('click', () => loadHistory(true));
+
 initialize();
 </script>
 </body>
