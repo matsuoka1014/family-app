@@ -129,7 +129,7 @@ async function loadHistory(append = false) {
   const timer = setTimeout(() => controller.abort(), 45000);
   try {
     const idToken = liff.getIDToken();
-    if (!idToken) throw new Error('ログインの有効期限が切れました。画面を開き直してください。');
+    if (!idToken) {showSessionNotice();throw new Error('ログインの有効期限が切れました。上の案内から再ログインしてください。');}
     const response = await fetch(API_URL, {
       method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',redirect:'follow',signal:controller.signal,
       body:JSON.stringify({action:'listMeals',idToken,offset,category:historyFilter.value,query:mealSearch.value.trim()})
@@ -210,7 +210,7 @@ async function todoRequest(action, params = {}) {
     const response = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',redirect:'follow',signal:controller.signal,body:JSON.stringify({...params,action,idToken})});
     if (!response.ok) throw new Error('通信エラー');
     const data = await response.json();
-    if (data.ok !== true) throw new Error(data.error || '操作できませんでした。');
+    if (data.ok !== true) {if(/認証|ログイン.*期限/.test(data.error||''))showSessionNotice();throw new Error(data.error || '操作できませんでした。');}
     return data.result;
   } finally {clearTimeout(timeout);}
 }
@@ -429,7 +429,7 @@ function summaryCard(title,subtitle,items,empty,tab,buttonLabel){
   const info=document.createElement('p');info.className='note';info.textContent=subtitle;card.append(heading,info);
   if(items.length){const list=document.createElement('ul');for(const text of items){const li=document.createElement('li');li.textContent=text;list.append(li);}card.append(list);}
   else{const p=document.createElement('p');p.className='home-empty';p.textContent=empty;card.append(p);}
-  const button=document.createElement('button');button.type='button';button.className='reuse';button.textContent=buttonLabel;button.addEventListener('click',()=>{showPanel(tab);window.scrollTo({top:0,behavior:'smooth'});});card.append(button);homeCards.append(card);
+  const button=document.createElement('button');button.type='button';button.className='reuse';button.textContent=buttonLabel;button.addEventListener('click',()=>{showPanel(tab);window.scrollTo({top:0,behavior:'smooth'});});card.append(button);appendTextPreviewButton(card,title,()=>title+'\n'+subtitle+'\n取得時点：'+homeStatus.textContent+'\n※ホームに表示中の要約です。\n\n'+(items.length?items.join('\n'):empty));homeCards.append(card);
 }
 async function loadHome(){
   if(!loggedIn)return;
@@ -485,7 +485,7 @@ saveNursery.addEventListener('click',async()=>{
  catch(error){nurseryStatus.textContent='結果を確認できませんでした。同じ一覧で再度登録しても同じ献立は重複しません。 '+error.message;}finally{lockNursery(false);}
 });
 
-document.getElementById('relogin').addEventListener('click',()=>{liff.logout();liff.login({redirectUri:APP_URL});});
+document.getElementById('relogin').addEventListener('click',()=>loginAgain());
 initialize();
 </script>
 
@@ -532,6 +532,24 @@ dateInput.addEventListener('change',loadDayPlan);document.getElementById('refres
 <style>
 .health-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.health-grid>div{min-width:0}#healthPanel input[type=time],#healthPanel input[type=number],#healthPanel input[type=search],#healthPanel select{font:inherit;width:100%;min-width:0;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white;margin:8px 0 22px}.health-extra{border-top:1px solid #e0e7dc;padding:12px 0}.health-entry{border-left:4px solid #74a48a}.health-detail{margin:14px 0!important;white-space:pre-wrap;line-height:1.8}.health-detail strong{display:block;font-size:12px;color:#60756b}.health-detail span{display:block}.health-entry button{margin-top:16px}.health-entry h3{font-size:17px}#healthPanel input[type=month]{display:block;width:100%;margin:8px 0 22px}
 </style>
+
+
+<style>
+#sessionNotice{border:2px solid #bb8541;background:#fff7e7;padding:16px;border-radius:14px;margin:16px 0}#sessionNotice p{font-size:14px;line-height:1.7}.text-preview-button{background:#e1f1e6;color:#263c33;margin-top:10px}#textPreview{width:min(540px,calc(100% - 24px));max-height:90dvh;border:0;border-radius:18px;padding:20px;color:#263c33}#textPreview::backdrop{background:#0007}#textPreview textarea{height:45dvh;font-size:15px;line-height:1.7}#textPreview .actions{display:flex;gap:10px}#textPreview h2{font-size:20px}
+</style>
+<dialog id="textPreview" aria-labelledby="textPreviewTitle"><h2 id="textPreviewTitle">一覧をテキストで見る</h2><p class="note">表示中の記録だけをまとめています。内容を確認してコピーし、LINEなどに貼り付けて使えます。自動送信はしません。</p><label for="textPreviewBody">共有する内容</label><textarea id="textPreviewBody" readonly></textarea><p id="textPreviewStatus" role="status"></p><div class="actions"><button type="button" id="copyPreview">コピー</button><button type="button" class="reuse" id="closePreview">閉じる</button></div></dialog>
+<script>
+const sessionNotice=document.createElement('section');sessionNotice.id='sessionNotice';sessionNotice.hidden=true;sessionNotice.setAttribute('role','alert');sessionNotice.innerHTML='<strong>LINEにログインし直してください</strong><p>ログインの有効期限が切れたか、認証を確認できませんでした。入力途中の内容があれば、先にコピーして控えてください。</p><button type="button" id="sessionLogin">LINEに再ログイン</button>';document.querySelector('header').after(sessionNotice);
+function showSessionNotice(){sessionNotice.hidden=false;}
+function loginAgain(){if(!window.liff){alert('LINEの読み込みを確認できません。画面を開き直してください。');return;}if(!confirm('再ログインのため画面を移動します。未保存の入力内容は引き継がれません。続けますか？'))return;liff.logout();liff.login({redirectUri:APP_URL});}
+document.getElementById('sessionLogin').addEventListener('click',loginAgain);
+const textPreview=document.getElementById('textPreview'),textPreviewBody=document.getElementById('textPreviewBody'),textPreviewStatus=document.getElementById('textPreviewStatus');
+function openTextPreview(title,text){document.getElementById('textPreviewTitle').textContent=title;textPreviewBody.value=text;textPreviewStatus.textContent='';textPreview.showModal();}
+document.getElementById('closePreview').addEventListener('click',()=>textPreview.close());
+document.getElementById('copyPreview').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(textPreviewBody.value);textPreviewStatus.textContent='コピーしました。共有先に貼り付けてください。';}catch(e){textPreviewBody.focus();textPreviewBody.select();textPreviewStatus.textContent='本文を選択しました。長押しなどでコピーしてください。';}});
+function appendTextPreviewButton(container,title,getText){const button=document.createElement('button');button.type='button';button.className='text-preview-button';button.textContent='一覧をテキストで見る・コピー';button.addEventListener('click',()=>openTextPreview(title,getText()));container.append(button);}
+const healthShare=document.createElement('div');healthList.before(healthShare);appendTextPreviewButton(healthShare,'健康日誌の共有',()=>{const records=Array.from(healthList.children).map(card=>Array.from(card.children).filter(el=>el.tagName!=='BUTTON').map(el=>el.tagName==='A'?el.href:el.innerText).join('\n'));const filters=[healthFilter.value||'全員',document.getElementById('healthMonth').value||'全期間',document.getElementById('healthTypeFilter').value||'全種類',document.getElementById('healthSearch').value].filter(Boolean).join(' ／ ');return '【健康日誌】\n'+filters+'\n'+healthCount.textContent+'\n※表示中の記録のみ。続きがある場合は「もっと見る」で読み込んでください。\n\n'+(records.length?records.join('\n\n---\n\n'):'表示中の記録はありません。');});
+</script>
 
 </body>
 </html>
