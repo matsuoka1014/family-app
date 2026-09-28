@@ -4,15 +4,15 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="referrer" content="no-referrer">
-  <title>ファミリー管理 · 献立</title>
+  <title>ファミリー管理</title>
   <style>
     *{box-sizing:border-box}body{margin:0;background:#f6f7f2;color:#263c33;font-family:system-ui,sans-serif}main{max-width:520px;margin:auto;padding:32px 20px 60px}header p{color:#60756b;font-size:14px}h1{font-size:28px;margin:8px 0}form{background:white;padding:24px;border-radius:22px;border:1px solid #e0e7dc;margin-top:24px}label,legend{font-weight:600;font-size:15px}input{font:inherit;color:inherit}input[type=date],input[type=text],input[type=url]{display:block;width:100%;min-width:0;padding:14px;margin:8px 0 22px;border:1px solid #bccdc2;border-radius:10px;font-size:16px}fieldset{border:0;padding:0;margin:0 0 22px}fieldset:disabled{opacity:.6}#fields{margin:0}legend{margin-bottom:10px}.choices{display:flex;gap:10px}.choice{flex:1;position:relative}.choice input{position:absolute;opacity:0}.choice span{display:block;padding:14px 8px;border:1px solid #bccdc2;border-radius:12px;text-align:center}.choice input:checked+span{background:#e1f1e6;border:2px solid #32724f;padding:13px 7px}.choice input:focus-visible+span{outline:3px solid #c39339}button{width:100%;padding:16px;border:0;border-radius:12px;background:#32724f;color:white;font:inherit;font-weight:bold;cursor:pointer}button:disabled{opacity:.5;cursor:wait}#status{line-height:1.7;white-space:pre-wrap;padding:16px 0;margin:0;font-size:14px}small{font-weight:normal;color:#64786d}.note{font-size:13px;line-height:1.7;color:#64786d}
-  .meal-card{background:white;border:1px solid #e0e7dc;border-radius:16px;padding:18px;margin:12px 0;overflow-wrap:anywhere}.meal-card h3{margin:8px 0 16px;font-size:18px}.meal-card p{margin:0}.meal-card a{display:inline-block;margin-top:14px;color:#32724f}.reuse{background:#e1f1e6;color:#263c33}#history{margin-top:36px}#history h2{font-size:23px}#historyStatus{font-size:14px;line-height:1.6}.history-tools{display:flex;gap:10px;align-items:center;margin-top:10px}.history-tools select{flex:1;min-width:0;font:inherit;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white}.history-tools button{width:auto;padding:12px 18px}button:focus-visible,a:focus-visible{outline:3px solid #c39339;outline-offset:3px}.app-tabs{display:flex;gap:10px;margin:24px 0}.app-tabs button{background:#e1f1e6;color:#263c33}.app-tabs button[aria-pressed=true]{background:#32724f;color:white}#todoMessage,#todoCount{font-size:14px;line-height:1.7}#todoFields{margin:0}.taskAction{margin-top:16px}.overdue{color:#a33a28;font-weight:bold}[hidden]{display:none!important}</style>
+  .meal-card{background:white;border:1px solid #e0e7dc;border-radius:16px;padding:18px;margin:12px 0;overflow-wrap:anywhere}.meal-card h3{margin:8px 0 16px;font-size:18px}.meal-card p{margin:0}.meal-card a{display:inline-block;margin-top:14px;color:#32724f}.reuse{background:#e1f1e6;color:#263c33}#history{margin-top:36px}#history h2{font-size:23px}#historyStatus{font-size:14px;line-height:1.6}.history-tools{display:flex;gap:10px;align-items:center;margin-top:10px}.history-tools select{flex:1;min-width:0;font:inherit;padding:12px;border:1px solid #bccdc2;border-radius:10px;background:white}.history-tools button{width:auto;padding:12px 18px}button:focus-visible,a:focus-visible{outline:3px solid #c39339;outline-offset:3px}.app-tabs{display:flex;gap:10px;margin:24px 0}.app-tabs button{background:#e1f1e6;color:#263c33}.app-tabs button[aria-pressed=true]{background:#32724f;color:white}#todoMessage,#todoCount{font-size:14px;line-height:1.7}#todoFields{margin:0}.taskAction{margin-top:16px}.overdue{color:#a33a28;font-weight:bold}[hidden]{display:none!important}textarea{display:block;width:100%;font:inherit;padding:12px;margin:8px 0 22px;border:1px solid #bccdc2;border-radius:10px}#scheduleMonth{min-width:0;width:100%;font:inherit;padding:10px;border:1px solid #bccdc2;border-radius:10px}#calendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;margin:20px 0}#calendar>span{text-align:center;font-size:13px;padding:8px 0}#calendar button{padding:12px 0;min-height:44px;border-radius:8px;font-size:14px;background:white;color:#263c33;border:1px solid #e0e7dc}#calendar button[aria-pressed=true]{background:#32724f;color:white}#calendar button.today{border:2px solid #c39339}.app-tabs button{padding:14px 4px}#scheduleStatus,#scheduleMessage{font-size:14px;line-height:1.7}#scheduleFields{margin:0}</style>
   <script charset="utf-8" src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 </head>
 <body>
 <main>
-  <header><p>家族のデジタル手帳</p><h1>今日の献立</h1><p>家庭と保育園のごはんを、ひとつの記録に。</p></header><nav class="app-tabs" aria-label="機能を選ぶ"><button id="mealTab" type="button" aria-pressed="true">🍽️ 献立</button><button id="todoTab" type="button" aria-pressed="false">✓ ToDo</button></nav><div id="mealPanel">
+  <header><p>家族のデジタル手帳</p><h1>今日の献立</h1><p>献立・やること・予定を、ひとつの手帳に。</p></header><nav class="app-tabs" aria-label="機能を選ぶ"><button id="mealTab" type="button" aria-pressed="true">🍽️ 献立</button><button id="todoTab" type="button" aria-pressed="false">✓ ToDo</button><button id="scheduleTab" type="button" aria-pressed="false">📅 予定</button></nav><div id="mealPanel">
   <p id="status" role="status" aria-live="polite">LINEのログイン状態を確認しています…</p>
   <form id="mealForm">
     <fieldset id="fields" disabled>
@@ -27,7 +27,7 @@
     </fieldset>
   </form>
   <p class="note">保存先は家族のスプレッドシートです。LINEへの通知は送りません。</p>
-<section id="history" hidden aria-labelledby="historyTitle"><h2 id="historyTitle">献立の履歴</h2><p class="note">過去の料理をタップして、料理名とURLを再利用できます。入力欄の日付は変わりません。</p><label for="historyFilter">区分で絞り込み</label><div class="history-tools"><select id="historyFilter"><option value="">すべて</option><option value="家庭">🏠 家庭</option><option value="保育園">🐣 保育園</option></select><button id="refreshHistory" type="button">更新</button></div><p id="historyStatus" role="status" aria-live="polite"></p><div id="historyList"></div><button id="moreHistory" type="button" hidden>もっと見る</button></section></div><section id="todoPanel" hidden aria-labelledby="todoHeading"><h2 id="todoHeading">家族のToDo</h2><p class="note">やることを追加して、終わったらタップ。期限はここで確認できます。</p><p id="todoMessage" role="status" aria-live="polite"></p><form id="todoForm"><fieldset id="todoFields" disabled><label for="task">やること</label><input id="task" type="text" maxlength="300" placeholder="例：保育園の書類を提出する" required><label for="due">期限 <small>任意</small></label><input id="due" type="date"><button type="submit" id="addTodo">タスクを追加</button></fieldset></form><div class="history-tools"><label for="todoFilter">表示</label><select id="todoFilter"><option value="未完了">未完了</option><option value="完了">完了済み</option></select><button type="button" id="refreshTodos">更新</button></div><p id="todoCount" role="status" aria-live="polite"></p><div id="todoList"></div><button id="moreTodos" type="button" hidden>もっと見る</button></section></main>
+<section id="history" hidden aria-labelledby="historyTitle"><h2 id="historyTitle">献立の履歴</h2><p class="note">過去の料理をタップして、料理名とURLを再利用できます。入力欄の日付は変わりません。</p><label for="historyFilter">区分で絞り込み</label><div class="history-tools"><select id="historyFilter"><option value="">すべて</option><option value="家庭">🏠 家庭</option><option value="保育園">🐣 保育園</option></select><button id="refreshHistory" type="button">更新</button></div><p id="historyStatus" role="status" aria-live="polite"></p><div id="historyList"></div><button id="moreHistory" type="button" hidden>もっと見る</button></section></div><section id="todoPanel" hidden aria-labelledby="todoHeading"><h2 id="todoHeading">家族のToDo</h2><p class="note">やることを追加して、終わったらタップ。期限はここで確認できます。</p><p id="todoMessage" role="status" aria-live="polite"></p><form id="todoForm"><fieldset id="todoFields" disabled><label for="task">やること</label><input id="task" type="text" maxlength="300" placeholder="例：保育園の書類を提出する" required><label for="due">期限 <small>任意</small></label><input id="due" type="date"><button type="submit" id="addTodo">タスクを追加</button></fieldset></form><div class="history-tools"><label for="todoFilter">表示</label><select id="todoFilter"><option value="未完了">未完了</option><option value="完了">完了済み</option></select><button type="button" id="refreshTodos">更新</button></div><p id="todoCount" role="status" aria-live="polite"></p><div id="todoList"></div><button id="moreTodos" type="button" hidden>もっと見る</button></section><section id="schedulePanel" hidden><p class="note">日付をタップして予定を確認・登録できます。時間や場所は備考にどうぞ。</p><div class="history-tools"><button id="prevMonth" type="button" aria-label="前の月">‹</button><label for="scheduleMonth">年月</label><input id="scheduleMonth" type="month" required><button id="nextMonth" type="button" aria-label="次の月">›</button></div><div class="history-tools"><button id="thisMonth" type="button">今月</button><button id="refreshSchedules" type="button">更新</button></div><p id="scheduleStatus" role="status" aria-live="polite"></p><div id="calendar" aria-label="予定カレンダー"></div><h2 id="selectedDayTitle"></h2><div id="dayEvents"></div><form id="scheduleForm"><fieldset id="scheduleFields" disabled><label for="scheduleDate">日付</label><input id="scheduleDate" type="date" required><label for="scheduleTitle">予定内容</label><input id="scheduleTitle" type="text" maxlength="300" placeholder="例：保育園の運動会" required><label for="scheduleNote">備考 <small>任意</small></label><textarea id="scheduleNote" maxlength="1000" rows="3" placeholder="例：10時から、公園に集合"></textarea><button type="submit">予定を追加</button></fieldset></form><p id="scheduleMessage" role="status" aria-live="polite"></p><h2>この月の予定</h2><div id="monthEvents"></div></section></main>
 <script>
 'use strict';
 const LIFF_ID = '2011765255-ruAFo2xu';
@@ -52,7 +52,7 @@ async function initialize() {
     if (!liff.isLoggedIn()) { liff.login({redirectUri:APP_URL}); return; }
     if (!liff.getIDToken()) throw new Error('認証情報を取得できません。LIFFのScopeでopenidを確認してください。');
     fields.disabled = false;
-    loggedIn = true; todoFields.disabled = false; if (!todoPanel.hidden) loadTodos();
+    loggedIn = true; todoFields.disabled = false; scheduleFields.disabled = false; if (!schedulePanel.hidden) loadSchedules(); if (!todoPanel.hidden) loadTodos();
     statusBox.textContent = '入力して「献立を保存」を押してください。';
     loadHistory();
   } catch (error) {
@@ -192,10 +192,10 @@ const refreshTodos = document.getElementById('refreshTodos');
 let todoBusy = false, todoNext = null, todoVersion = 0, pendingTodo = null, loggedIn = false;
 function showPanel(name) {
   document.getElementById('mealPanel').hidden = name !== 'meal';
-  todoPanel.hidden = name !== 'todo';
+  todoPanel.hidden = name !== 'todo'; schedulePanel.hidden = name !== 'schedule'; document.getElementById('scheduleTab').setAttribute('aria-pressed',String(name === 'schedule')); if(name === 'schedule' && loggedIn) loadSchedules();
   document.getElementById('mealTab').setAttribute('aria-pressed',String(name === 'meal'));
   document.getElementById('todoTab').setAttribute('aria-pressed',String(name === 'todo'));
-  document.querySelector('h1').textContent = name === 'todo' ? '家族のToDo' : '今日の献立';
+  document.querySelector('h1').textContent = name === 'schedule' ? '家族の予定' : name === 'todo' ? '家族のToDo' : '今日の献立';
   if (name === 'todo' && loggedIn) loadTodos();
 }
 document.getElementById('mealTab').addEventListener('click',()=>showPanel('meal'));
@@ -283,6 +283,98 @@ todoForm.addEventListener('submit',async event=>{
 todoFilter.addEventListener('change',()=>loadTodos());
 refreshTodos.addEventListener('click',()=>loadTodos());
 moreTodos.addEventListener('click',()=>loadTodos(true));
+
+
+const schedulePanel = document.getElementById('schedulePanel');
+const scheduleFields = document.getElementById('scheduleFields');
+const scheduleMonth = document.getElementById('scheduleMonth');
+const scheduleDate = document.getElementById('scheduleDate');
+const scheduleTitle = document.getElementById('scheduleTitle');
+const scheduleNote = document.getElementById('scheduleNote');
+const scheduleStatus = document.getElementById('scheduleStatus');
+const scheduleMessage = document.getElementById('scheduleMessage');
+let scheduleEvents = [], scheduleVersion = 0, scheduleBusy = false, pendingSchedule = null;
+const todaySchedule = dateInput.value;
+scheduleMonth.value = todaySchedule.slice(0,7); scheduleDate.value = todaySchedule;
+function eventCard(event) {
+  const card = document.createElement('article'); card.className = 'meal-card';
+  const date = document.createElement('p'); date.className = 'note'; date.textContent = event.date;
+  const title = document.createElement('h3'); title.textContent = event.title;
+  const note = document.createElement('p'); note.style.whiteSpace = 'pre-wrap'; note.textContent = event.note;
+  card.append(date,title,note); return card;
+}
+function renderScheduleDay() {
+  const day = scheduleDate.value;
+  document.getElementById('selectedDayTitle').textContent = day + ' の予定';
+  const list = document.getElementById('dayEvents'); list.replaceChildren();
+  const events = scheduleEvents.filter(e=>e.date===day);
+  if (!events.length) {const p=document.createElement('p');p.className='note';p.textContent='この日の予定はありません。';list.append(p);}
+  events.forEach(e=>list.append(eventCard(e)));
+  for(const button of document.querySelectorAll('#calendar button')) button.setAttribute('aria-pressed',String(button.dataset.date===day));
+}
+function renderSchedules() {
+  const calendar = document.getElementById('calendar'); calendar.replaceChildren();
+  const [year,month] = scheduleMonth.value.split('-').map(Number);
+  for (const label of ['日','月','火','水','木','金','土']) {const el=document.createElement('span');el.textContent=label;calendar.append(el);}
+  const first = new Date(year,month-1,1).getDay(), days = new Date(year,month,0).getDate();
+  for(let i=0;i<first;i++) calendar.append(document.createElement('span'));
+  for(let d=1;d<=days;d++) {
+    const date = scheduleMonth.value+'-'+String(d).padStart(2,'0');
+    const count = scheduleEvents.filter(e=>e.date===date).length;
+    const button=document.createElement('button');button.type='button';button.dataset.date=date;
+    button.textContent=String(d)+(count?' •':'');button.setAttribute('aria-label',date+'、予定'+count+'件');
+    if(date===todaySchedule) button.classList.add('today');
+    button.addEventListener('click',()=>{if(scheduleBusy)return;scheduleDate.value=date;renderScheduleDay();});calendar.append(button);
+  }
+  const list=document.getElementById('monthEvents');list.replaceChildren();
+  if(!scheduleEvents.length) {const p=document.createElement('p');p.className='note';p.textContent='この月の予定はありません。';list.append(p);}
+  scheduleEvents.forEach(e=>list.append(eventCard(e)));renderScheduleDay();
+}
+async function loadSchedules() {
+  if(!loggedIn || !scheduleMonth.value) return;
+  const version=++scheduleVersion, month=scheduleMonth.value;
+  scheduleStatus.textContent='予定を読み込んでいます…';
+  document.getElementById('calendar').replaceChildren(); document.getElementById('dayEvents').replaceChildren(); document.getElementById('monthEvents').replaceChildren();
+  try {
+    const result=await todoRequest('listSchedules',{month});
+    if(version!==scheduleVersion)return;
+    if(!result || !Array.isArray(result.events))throw new Error('予定を確認できません。');
+    scheduleEvents=result.events;renderSchedules();scheduleStatus.textContent=month.replace('-','年')+'月 ／ '+scheduleEvents.length+'件（• は予定のある日）';
+  } catch(error) {if(version===scheduleVersion){scheduleEvents=[];scheduleStatus.textContent='読み込めませんでした。「更新」を押してください。 '+error.message;}}
+}
+function selectMonth(month) {
+  scheduleMonth.value=month;
+  if(scheduleDate.value.slice(0,7)!==month) scheduleDate.value=month===todaySchedule.slice(0,7)?todaySchedule:month+'-01';
+  loadSchedules();
+}
+function shiftMonth(step) {
+  const [y,m]=scheduleMonth.value.split('-').map(Number); const next=new Date(y,m-1+step,1);
+  if(next.getFullYear()<1000 || next.getFullYear()>9999)return;
+  selectMonth(next.getFullYear()+'-'+String(next.getMonth()+1).padStart(2,'0'));
+}
+document.getElementById('scheduleTab').addEventListener('click',()=>showPanel('schedule'));
+document.getElementById('prevMonth').addEventListener('click',()=>shiftMonth(-1));
+document.getElementById('nextMonth').addEventListener('click',()=>shiftMonth(1));
+document.getElementById('thisMonth').addEventListener('click',()=>selectMonth(todaySchedule.slice(0,7)));
+document.getElementById('refreshSchedules').addEventListener('click',()=>loadSchedules());
+scheduleMonth.addEventListener('change',()=>{if(scheduleMonth.value)selectMonth(scheduleMonth.value);});
+scheduleDate.addEventListener('change',()=>{if(!scheduleDate.value)return;if(scheduleDate.value.slice(0,7)!==scheduleMonth.value)selectMonth(scheduleDate.value.slice(0,7));else renderScheduleDay();});
+document.getElementById('scheduleForm').addEventListener('submit',async event=>{
+  event.preventDefault();if(scheduleBusy || !event.target.reportValidity())return;
+  const data={date:scheduleDate.value,title:scheduleTitle.value.trim(),note:scheduleNote.value.trim()};
+  if(!data.title){scheduleMessage.textContent='予定内容を入力してください。';return;}
+  const signature=JSON.stringify(data);
+  if(!pendingSchedule || pendingSchedule.signature!==signature)pendingSchedule={signature,id:crypto.randomUUID()};
+  scheduleBusy=true;scheduleFields.disabled=true;
+  for(const el of schedulePanel.querySelectorAll('.history-tools button,.history-tools input'))el.disabled=true;
+  scheduleMessage.textContent='保存しています…';
+  try {
+    await todoRequest('addSchedule',{...data,id:pendingSchedule.id});pendingSchedule=null;
+    scheduleTitle.value='';scheduleNote.value='';scheduleMonth.value=data.date.slice(0,7);
+    scheduleMessage.textContent='予定を追加しました。';await loadSchedules();
+  } catch(error) {scheduleMessage.textContent='結果を確認できませんでした。「更新」で確認してください。この画面で同じ内容を再送しても重複しません。 '+error.message;}
+  finally {scheduleBusy=false;scheduleFields.disabled=!loggedIn;for(const el of schedulePanel.querySelectorAll('.history-tools button,.history-tools input'))el.disabled=false;}
+});
 
 initialize();
 </script>
