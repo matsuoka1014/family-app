@@ -487,7 +487,7 @@ saveNursery.addEventListener('click',async()=>{
 });
 
 document.getElementById('relogin').addEventListener('click',()=>loginAgain());
-initialize();
+document.addEventListener('DOMContentLoaded',initialize,{once:true});
 </script>
 
 <style>.manage-open{margin:8px 0 18px;background:#e0ece6;color:#24573e}.manage-dialog{width:min(680px,94vw);max-height:90dvh;box-sizing:border-box;border:1px solid #cad8ce;border-radius:18px;padding:22px;color:#24424b;background:#f8faf7}.manage-dialog::backdrop{background:#0007}.manage-dialog input,.manage-dialog select,.manage-dialog textarea{box-sizing:border-box;width:100%;margin:6px 0 14px}.manage-dialog .tools{display:flex;gap:8px;flex-wrap:wrap}.manage-dialog button{margin:4px 0}.manage-dialog .danger{background:#a53e3e;color:white}.manage-dialog .secondary{background:#e3ebe5;color:#254735}.manage-dialog article{border:1px solid #dbe3db;border-radius:12px;padding:14px;margin:12px 0;background:white}.manage-dialog h3{margin:4px 0}.manage-dialog .detail{white-space:pre-wrap;overflow-wrap:anywhere}.manage-dialog fieldset{border:0;padding:0}.manage-dialog .close{float:right;background:#e3ebe5;color:#254735;padding:8px 12px}</style>
