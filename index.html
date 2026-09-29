@@ -210,7 +210,7 @@ async function todoRequest(action, params = {}) {
     const response = await fetch(API_URL,{method:'POST',headers:{'Content-Type':'text/plain;charset=UTF-8'},credentials:'omit',redirect:'follow',signal:controller.signal,body:JSON.stringify({...params,action,idToken})});
     if (!response.ok) throw new Error('通信エラー');
     const data = await response.json();
-    if (data.ok !== true) {if(/認証|ログイン.*期限/.test(data.error||''))showSessionNotice();throw new Error(data.error || '操作できませんでした。');}
+    if (data.ok !== true) {if(/利用が許可/.test(data.error||''))showFamilyRegistration();if(/認証|ログイン.*期限/.test(data.error||''))showSessionNotice();throw new Error(data.error || '操作できませんでした。');}
     return data.result;
   } finally {clearTimeout(timeout);}
 }
@@ -549,6 +549,28 @@ document.getElementById('closePreview').addEventListener('click',()=>textPreview
 document.getElementById('copyPreview').addEventListener('click',async()=>{try{await navigator.clipboard.writeText(textPreviewBody.value);textPreviewStatus.textContent='コピーしました。共有先に貼り付けてください。';}catch(e){textPreviewBody.focus();textPreviewBody.select();textPreviewStatus.textContent='本文を選択しました。長押しなどでコピーしてください。';}});
 function appendTextPreviewButton(container,title,getText){const button=document.createElement('button');button.type='button';button.className='text-preview-button';button.textContent='一覧をテキストで見る・コピー';button.addEventListener('click',()=>openTextPreview(title,getText()));container.append(button);}
 const healthShare=document.createElement('div');healthList.before(healthShare);appendTextPreviewButton(healthShare,'健康日誌の共有',()=>{const records=Array.from(healthList.children).map(card=>Array.from(card.children).filter(el=>el.tagName!=='BUTTON').map(el=>el.tagName==='A'?el.href:el.innerText).join('\n'));const filters=[healthFilter.value||'全員',document.getElementById('healthMonth').value||'全期間',document.getElementById('healthTypeFilter').value||'全種類',document.getElementById('healthSearch').value].filter(Boolean).join(' ／ ');return '【健康日誌】\n'+filters+'\n'+healthCount.textContent+'\n※表示中の記録のみ。続きがある場合は「もっと見る」で読み込んでください。\n\n'+(records.length?records.join('\n\n---\n\n'):'表示中の記録はありません。');});
+
+// Show only the current user's identifier; authorization stays on the server.
+function showFamilyRegistration() {
+  let panel = document.getElementById('familyRegistration');
+  if (panel) { panel.hidden = false; return; }
+  panel = document.createElement('section');
+  panel.id = 'familyRegistration'; panel.className = 'meal-card';
+  const heading = document.createElement('h2'); heading.textContent = '家族の利用登録が必要です';
+  const help = document.createElement('p'); help.textContent = '下の登録用IDをコピーして、アプリを管理している家族に送ってください。登録が終わったら「最新の情報に更新」を押してください。';
+  const field = document.createElement('input'); field.type = 'text'; field.readOnly = true; field.setAttribute('aria-label', 'あなたの登録用ID');
+  const sub = window.liff && liff.getDecodedIDToken()?.sub;
+  field.value = typeof sub === 'string' && /^U[0-9a-f]{32}$/i.test(sub) ? sub : '';
+  const copy = document.createElement('button'); copy.type = 'button'; copy.textContent = '登録用IDをコピー'; copy.disabled = !field.value;
+  const message = document.createElement('p'); message.setAttribute('role','status');
+  if (!field.value) message.textContent = '登録用IDを取得できませんでした。「LINEに再ログイン」から開き直してください。';
+  copy.addEventListener('click', async () => {
+    try { await navigator.clipboard.writeText(field.value); message.textContent = 'コピーしました。管理している家族に送ってください。'; }
+    catch (_) { field.focus(); field.select(); field.setSelectionRange(0, field.value.length); message.textContent = '選択されたIDを長押ししてコピーしてください。'; }
+  });
+  panel.append(heading, help, field, copy, message);
+  document.querySelector('header').after(panel);
+}
 </script>
 
 </body>
